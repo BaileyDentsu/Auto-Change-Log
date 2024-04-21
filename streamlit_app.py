@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 
@@ -17,12 +16,12 @@ def compare_csv(df1, df2, selected_columns):
     # Process added URLs
     for url in added:
         row = df2.loc[url]
-        data.append(['Added', url] + ['' if col not in selected_columns else row.get(col, '') for col in selected_columns])
+        data.append(['Added', url] + ['' for col in selected_columns for _ in (0, 1)] + [row.get(col, '') for col in selected_columns])
 
     # Process removed URLs
     for url in removed:
         row = df1.loc[url]
-        data.append(['Removed', url] + [row.get(col, '') if col in selected_columns else '' for col in selected_columns])
+        data.append(['Removed', url] + [row.get(col, '') for col in selected_columns] + ['' for col in selected_columns])
 
     # Process modified URLs
     for url in common:
@@ -37,11 +36,11 @@ def compare_csv(df1, df2, selected_columns):
                 row_data.extend([old_val, new_val])
                 modified = True
             else:
-                row_data.extend([old_val, ''])
+                row_data.extend([old_val, old_val])  # Reflect unmodified values in both old and new for clarity
         if modified:
             data.append(row_data)
 
-    # Create the output DataFrame
+    # Define the columns for the output DataFrame
     headers = ['Added/Removed/Modified', 'URL'] + [f'Old {col}' for col in selected_columns] + [f'New {col}' for col in selected_columns]
     output_df = pd.DataFrame(data, columns=headers)
     return output_df
