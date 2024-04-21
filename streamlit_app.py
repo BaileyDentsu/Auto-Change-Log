@@ -14,11 +14,13 @@ def compare_csv(df1, df2, selected_columns):
     # Process added URLs
     for url in added:
         row = df2.loc[url]
-        data.append(['Added', url] + ['' for _ in selected_columns] * 2 + [row.get(col, '') for col in selected_columns])
+        # Add empty strings for 'Old' columns and actual values for 'New' columns
+        data.append(['Added', url] + ['' for _ in selected_columns] + [row.get(col, '') for col in selected_columns])
 
     # Process removed URLs
     for url in removed:
         row = df1.loc[url]
+        # Add actual values for 'Old' columns and empty strings for 'New' columns
         data.append(['Removed', url] + [row.get(col, '') for col in selected_columns] + ['' for _ in selected_columns])
 
     # Process modified URLs
@@ -26,16 +28,12 @@ def compare_csv(df1, df2, selected_columns):
         row1 = df1.loc[url]
         row2 = df2.loc[url]
         row_data = ['Modified', url]
-        row_entries = []
         for col in selected_columns:
             old_val = row1.get(col, '')
             new_val = row2.get(col, '')
-            if old_val != new_val:
-                row_entries.extend([old_val, new_val])
-            else:
-                row_entries.extend([old_val, ''])  # Leave new value column blank if unchanged
+            row_data.append(old_val)  # Always add Old values
+            row_data.append(new_val if old_val != new_val else '')  # Add New values only if changed
 
-        row_data.extend(row_entries)
         data.append(row_data)
 
     # Construct headers for the DataFrame
