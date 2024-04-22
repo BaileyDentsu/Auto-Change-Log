@@ -30,16 +30,21 @@ def compare_csv(df1, df2, columns_to_compare):
         row2 = df2.loc[Address]
         changes = ['Modified', Address]
         row_entries = []
+        modified = False  # Reset flag for each URL
 
         for col in columns_to_compare:
             old_val = row1.get(col, '')
             new_val = row2.get(col, '')
-            # Append 'Old' and 'New' values directly following each other
             row_entries.append(old_val)
-            row_entries.append(new_val if old_val != new_val else '')
+            if old_val != new_val:
+                row_entries.append(new_val)
+                modified = True
+            else:
+                row_entries.append('')  # Append blank for unchanged 'New' values
 
-        changes.extend(row_entries)
-        data.append(changes)
+        if modified:
+            changes.extend(row_entries)
+            data.append(changes)
 
     # Constructing output DataFrame headers
     output_columns = ['Added/Removed/Modified', 'Address']
