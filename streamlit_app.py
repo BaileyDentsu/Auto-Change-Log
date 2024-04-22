@@ -16,34 +16,30 @@ def compare_csv(df1, df2, columns_to_compare):
     for Address in added:
         row = df2.loc[Address]
         # Append blank 'Old' values and current 'New' values for each column to compare
-        data.append(['Added', Address] + ['' for _ in columns_to_compare] + [row.get(col, '') for col in columns_to_compare])
+        data.append(['Added', Address] + [item for col in columns_to_compare for item in ('', row.get(col, ''))])
 
     # Removed URLs
     for Address in removed:
         row = df1.loc[Address]
         # Append current 'Old' values and blank 'New' values for each column to compare
-        data.append(['Removed', Address] + [row.get(col, '') for col in columns_to_compare] + ['' for _ in columns_to_compare])
+        data.append(['Removed', Address] + [item for col in columns_to_compare for item in (row.get(col, ''), '')])
 
     # Modified URLs
     for Address in common:
         row1 = df1.loc[Address]
         row2 = df2.loc[Address]
         changes = ['Modified', Address]
-        modified = False
+        row_entries = []
 
         for col in columns_to_compare:
             old_val = row1.get(col, '')
             new_val = row2.get(col, '')
-            if old_val != new_val:
-                # If values differ, append both 'Old' and 'New'
-                changes.extend([old_val, new_val])
-                modified = True
-            else:
-                # If values are the same, append 'Old' and a blank for 'New'
-                changes.extend([old_val, ''])
+            # Append 'Old' and 'New' values directly following each other
+            row_entries.append(old_val)
+            row_entries.append(new_val if old_val != new_val else '')
 
-        if modified:
-            data.append(changes)
+        changes.extend(row_entries)
+        data.append(changes)
 
     # Constructing output DataFrame headers
     output_columns = ['Added/Removed/Modified', 'Address']
