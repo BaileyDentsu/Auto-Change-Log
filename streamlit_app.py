@@ -2,61 +2,57 @@ import streamlit as st
 import pandas as pd
 
 def compare_csv(df1, df2, columns_to_compare):
-    # Set the 'Address' column as index for easy comparison
+    # Setting 'Address' as index for comparison
     df1.set_index('Address', inplace=True)
     df2.set_index('Address', inplace=True)
 
-    # Identify added, removed, and modified URLs
     added = df2.index.difference(df1.index)
     removed = df1.index.difference(df2.index)
     common = df1.index.intersection(df2.index)
 
-    # Prepare list for data to be collected
     data = []
 
-    # Process added URLs
+    # Added URLs
     for Address in added:
         row = df2.loc[Address]
-        data.append(
-            ['Added', Address] + ['' for _ in columns_to_compare] + [row.get(col, '') for col in columns_to_compare]
-        )
+        # Append blank 'Old' values and current 'New' values for each column to compare
+        data.append(['Added', Address] + ['' for _ in columns_to_compare] + [row.get(col, '') for col in columns_to_compare])
 
-    # Process removed URLs
+    # Removed URLs
     for Address in removed:
         row = df1.loc[Address]
-        data.append(
-            ['Removed', Address] + [row.get(col, '') for col in columns_to_compare] + ['' for _ in columns_to_compare]
-        )
+        # Append current 'Old' values and blank 'New' values for each column to compare
+        data.append(['Removed', Address] + [row.get(col, '') for col in columns_to_compare] + ['' for _ in columns_to_compare])
 
-    # Process modified URLs
+    # Modified URLs
     for Address in common:
         row1 = df1.loc[Address]
         row2 = df2.loc[Address]
         changes = ['Modified', Address]
-        modified = False  # Flag to track if any changes exist
+        modified = False
 
         for col in columns_to_compare:
             old_val = row1.get(col, '')
             new_val = row2.get(col, '')
             if old_val != new_val:
+                # If values differ, append both 'Old' and 'New'
                 changes.extend([old_val, new_val])
                 modified = True
             else:
-                # Extend with old value and a blank for the new value to preserve column alignment
+                # If values are the same, append 'Old' and a blank for 'New'
                 changes.extend([old_val, ''])
 
         if modified:
             data.append(changes)
 
-    # Define the columns for the output DataFrame
+    # Constructing output DataFrame headers
     output_columns = ['Added/Removed/Modified', 'Address']
     for col in columns_to_compare:
         output_columns.extend([f'Old {col}', f'New {col}'])
 
-    # Create the output DataFrame from the collected data
+    # Creating DataFrame from the collected data
     return pd.DataFrame(data, columns=output_columns)
 
-# Streamlit UI setup
 st.title('CSV Comparison Tool')
 
 # File uploaders
@@ -67,7 +63,7 @@ if file1 and file2:
     df1 = pd.read_csv(file1)
     df2 = pd.read_csv(file2)
     columns = df1.columns.tolist()
-    columns.remove('Address')  # Assume 'Address' should not be chosen for comparison
+    columns.remove('Address')  # Assuming 'Address' should not be compared
     selected_columns = st.multiselect('Select columns to compare:', options=columns)
 
     if st.button('Compare Files'):
@@ -75,7 +71,6 @@ if file1 and file2:
             result_df = compare_csv(df1, df2, selected_columns)
             st.dataframe(result_df)
             
-            # Create a CSV download link
             csv = result_df.to_csv(index=False).encode('utf-8')
             st.download_button("Download output CSV", csv, "changeLog.csv", "text/csv", key='download-csv')
         else:
