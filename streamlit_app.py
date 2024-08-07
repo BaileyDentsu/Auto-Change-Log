@@ -31,7 +31,24 @@ def compare_csv(df1, df2, columns_to_compare):
         changes = ['Modified', Address]
         row_entries = []
         modified = False  # Reset flag for each URL
+        
+        for col in columns_to_compare:
+            old_val = row1.get(col, '')
+            new_val = row2.get(col, '')
+       
+            # Convert to single values if Series
+            old_val = old_val.iloc[0] if isinstance(old_val, pd.Series) and not old_val.empty else old_val
+            new_val = new_val.iloc[0] if isinstance(new_val, pd.Series) and not new_val.empty else new_val
+       
+            row_entries.append(old_val)
+            if old_val != new_val:
+                row_entries.append(new_val)
+                modified = True
+            else:
+                row_entries.append('')  # Append blank for unchanged 'New' values
 
+"""
+OLD CODE CAUSING ERRORS
         for col in columns_to_compare:
             old_val = row1.get(col, '')
             new_val = row2.get(col, '')
@@ -41,6 +58,7 @@ def compare_csv(df1, df2, columns_to_compare):
                 modified = True
             else:
                 row_entries.append('')  # Append blank for unchanged 'New' values
+"""
 
         if modified:
             changes.extend(row_entries)
